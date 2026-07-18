@@ -67,11 +67,19 @@ def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    Thread(target=run_flask).start()
+    # 1. Flask'ı ayrı bir thread'de başlat
+    flask_thread = Thread(target=run_flask, daemon=True)
+    flask_thread.start()
     
+    # 2. Botu ana süreçte çalıştır (en kararlı yöntem)
     if TELEGRAM_BOT_TOKEN:
+        print("--- BOT BAŞLATILIYOR ---")
         application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
         application.add_handler(CallbackQueryHandler(button_click))
         application.add_handler(CommandHandler("haber", start_news))
         application.job_queue.run_repeating(check_news, interval=21600, first=5)
+        
+        print("--- POLLİNG BAŞLIYOR ---")
         application.run_polling()
+    else:
+        print("HATA: Token eksik, bot başlatılamadı.")
