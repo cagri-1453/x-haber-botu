@@ -76,6 +76,14 @@ if __name__ == '__main__':
     # Telegram botunu başlat
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CallbackQueryHandler(button_click))
+from telegram.ext import CommandHandler # Bunu importların arasına ekle
+
+# Fonksiyonun altına bunu ekle
+async def start_news(update, context):
+    await check_news(context)
+
+# main kısmına bunu ekle
+application.add_handler(CommandHandler("haber", start_news))
     
     # 6 saatte bir tarama yap (Ücretsiz RSS sorgusu)
     application.job_queue.run_repeating(check_news, interval=21600, first=10)
