@@ -6,7 +6,7 @@ from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
 
-# Render Environment'tan bilgileri al
+# DEĞİŞKEN İSİMLERİ RENDER'DAKİLERLE AYNI KALMALI
 TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
 YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
@@ -34,7 +34,8 @@ async def check_news(context):
             [InlineKeyboardButton("✅ Paylaş", callback_data=f"p_{news_id}"),
              InlineKeyboardButton("❌ Sil", callback_data=f"s_{news_id}")]
         ]
-        await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=f"{title}\n{link}", reply_markup=InlineKeyboardMarkup(keyboard))
+        if YOUR_TELEGRAM_ID:
+            await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=f"{title}\n{link}", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def start_news(update, context):
     await check_news(context)
@@ -66,21 +67,11 @@ def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    print("--- BOT BAŞLATILIYOR ---")
-    if not TELEGRAM_BOT_TOKEN:
-        print("HATA: TELEGRAM_BOT_TOKEN bulunamadı!")
-    else:
-        print(f"Token okundu, uzunluk: {len(TELEGRAM_BOT_TOKEN)}")
-
     Thread(target=run_flask).start()
     
-    try:
+    if TELEGRAM_BOT_TOKEN:
         application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
         application.add_handler(CallbackQueryHandler(button_click))
         application.add_handler(CommandHandler("haber", start_news))
         application.job_queue.run_repeating(check_news, interval=21600, first=5)
-        
-        print("--- POLLİNG BAŞLIYOR ---")
         application.run_polling()
-    except Exception as e:
-        print(f"KRİTİK HATA: {e}")
