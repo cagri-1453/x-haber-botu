@@ -4,33 +4,33 @@ import tweepy
 from flask import Flask
 from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler
 
-# Sadece gerekli değişkenler
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-YOUR_TELEGRAM_ID = os.environ.get("YOUR_TELEGRAM_ID")
+# 1. BÜTÜN AYARLARI BURADAN ALIYORUZ (Render'daki Environment'tan)
+TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
+YOUR_TELEGRAM_ID = os.environ.get("7512577586")
+API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
+API_SECRET = os.environ.get("EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb")
+ACCESS_TOKEN = os.environ.get("457483523-hsBomhqHfpdqeWlJYiFOmBIjTjgOgvW8pN9FFevk")
+ACCESS_TOKEN_SECRET = os.environ.get("xlc2xEb7HfmuyCnDkjUyhiREsCF0uNqXHFmfKjMN40nt0")
 
-# Twitter API anahtarları (Sadece tweet fonksiyonu içinde kullanılacak)
-API_KEY = os.environ.get("API_KEY")
-API_SECRET = os.environ.get("API_SECRET")
-ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
-ACCESS_TOKEN_SECRET = os.environ.get("ACCESS_TOKEN_SECRET")
-
+# Geçici hafıza
 news_cache = {}
 
 def get_latest_news():
     news_list = []
+    # Bu RSS çekme işlemi Twitter API'sini hiç kullanmaz (Kredi yakmaz)
     urls = ["https://tr.investing.com/rss/news.rss", "https://www.kap.org.tr/tr/api/dis-kaynak/rss", "https://www.bloomberght.com/rss"]
     for url in urls:
         feed = feedparser.parse(url)
         for i, entry in enumerate(feed.entries[:2]):
-            news_id = f"n_{url.split('/')[2]}_{i}"
+            news_id = f"n_{i}_{url.split('/')[2]}"
             news_cache[news_id] = {'title': entry.title, 'link': entry.link}
             news_list.append((news_id, entry.title, entry.link))
     return news_list
 
 async def check_news(context):
-    news = get_latest_news() # Burası tamamen ücretsiz RSS sorgusu
+    news = get_latest_news()
     for news_id, title, link in news:
         keyboard = [
             [InlineKeyboardButton("✅ Paylaş", callback_data=f"p_{news_id}"),
@@ -43,11 +43,11 @@ async def button_click(update, context):
     data = query.data
     news_id = data[2:]
     
-    if data.startswith("p_"): # PAYLAŞ - API KREDİSİ BURADA HARCANIR
+    if data.startswith("p_"): # PAYLAŞA BASILDIĞINDA API KREDİSİ HARCANIR
         item = news_cache.get(news_id)
         if item:
             try:
-                # API istemcisini burada kuruyoruz (Sadece paylaştığında)
+                # Twitter bağlantısı SADECE BURADA kuruluyor
                 client = tweepy.Client(consumer_key=API_KEY, consumer_secret=API_SECRET, 
                                        access_token=ACCESS_TOKEN, access_token_secret=ACCESS_TOKEN_SECRET)
                 client.create_tweet(text=f"{item['title']}\n{item['link']}")
@@ -55,9 +55,9 @@ async def button_click(update, context):
             except Exception as e:
                 await query.edit_message_text(text=f"❌ API Hatası: {str(e)}")
         else:
-            await query.edit_message_text(text="❌ Haber hafızadan silinmiş.")
+            await query.edit_message_text(text="❌ Haber bulunamadı.")
             
-    elif data.startswith("s_"): # SİL - API KREDİSİ HARCANMAZ
+    elif data.startswith("s_"): # Silme işlemi tamamen yerel
         await query.edit_message_text(text="❌ Haber silindi.")
 
 app = Flask(__name__)
@@ -69,6 +69,6 @@ if __name__ == '__main__':
     Thread(target=run_flask).start()
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CallbackQueryHandler(button_click))
-    # Buradaki interval (saniye) senin tercihine göre ayarlanabilir, RSS sorgusu ücretsizdir.
-    application.job_queue.run_repeating(check_news, interval=3600, first=10) 
+    # 6 saatte bir tarar, Twitter API'siyle alakası yoktur
+    application.job_queue.run_repeating(check_news, interval=21600, first=10)
     application.run_polling()
