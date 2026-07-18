@@ -1,9 +1,6 @@
-# X (Twitter) API Anahtarları
-API_KEY = "cn6zvjYROGLnKFOYgYWQo0GF4"
-API_SECRET = "EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"
-ACCESS_TOKEN = "457483523-ghpltUcwCfXarBcJqujOUwqloZvKr5tnaAPkBi7f"
-ACCESS_TOKEN_SECRET = "YPOjjNNgQvgrAs36jj8Yqr7dbGszXZFiWgCEd05E71Dmd"
-
-# Telegram Bot Token ve ID
-TELEGRAM_BOT_TOKEN = "8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8"
-YOUR_TELEGRAM_ID = "7512577586"
+import os
+# Değişkenleri her zaman Render'ın güvenli Environment sekmesinden al
+API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
+API_SECRET = os.environ.get("EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb")
+ACCESS_TOKEN = os.environ.get("457483523-hsBomhqHfpdqeWlJYiFOmBIjTjgOgvW8pN9FFevk")
+ACCESS_TOKEN_SECRET = os.environ.get("xlc2xEb7HfmuyCnDkjUyhiREsCF0uNqXHFmfKjMN40nt0")
