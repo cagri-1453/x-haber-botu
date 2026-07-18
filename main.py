@@ -6,7 +6,7 @@ from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler
 
-# 1. BÜTÜN AYARLARI BURADAN ALIYORUZ (Render'daki Environment'tan)
+# Render Environment ayarlarından bilgileri çekiyoruz
 TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
 YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
@@ -14,12 +14,12 @@ API_SECRET = os.environ.get("EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"
 ACCESS_TOKEN = os.environ.get("457483523-hsBomhqHfpdqeWlJYiFOmBIjTjgOgvW8pN9FFevk")
 ACCESS_TOKEN_SECRET = os.environ.get("xlc2xEb7HfmuyCnDkjUyhiREsCF0uNqXHFmfKjMN40nt0")
 
-# Geçici hafıza
+# Haberleri hafızada tutmak için sözlük
 news_cache = {}
 
+# RSS kaynaklarını ücretsiz tara (Twitter API harcamaz)
 def get_latest_news():
     news_list = []
-    # Bu RSS çekme işlemi Twitter API'sini hiç kullanmaz (Kredi yakmaz)
     urls = ["https://tr.investing.com/rss/news.rss", "https://www.kap.org.tr/tr/api/dis-kaynak/rss", "https://www.bloomberght.com/rss"]
     for url in urls:
         feed = feedparser.parse(url)
@@ -29,6 +29,7 @@ def get_latest_news():
             news_list.append((news_id, entry.title, entry.link))
     return news_list
 
+# Haberleri Telegram'a gönderen fonksiyon
 async def check_news(context):
     news = get_latest_news()
     for news_id, title, link in news:
@@ -38,8 +39,10 @@ async def check_news(context):
         ]
         await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=f"{title}\n{link}", reply_markup=InlineKeyboardMarkup(keyboard))
 
+# Buton tıklamalarını yöneten fonksiyon
 async def button_click(update, context):
     query = update.callback_query
+    await query.answer()
     data = query.data
     news_id = data[2:]
     
@@ -55,20 +58,26 @@ async def button_click(update, context):
             except Exception as e:
                 await query.edit_message_text(text=f"❌ API Hatası: {str(e)}")
         else:
-            await query.edit_message_text(text="❌ Haber bulunamadı.")
+            await query.edit_message_text(text="❌ Haber hafızadan silinmiş.")
             
-    elif data.startswith("s_"): # Silme işlemi tamamen yerel
+    elif data.startswith("s_"): # SİL - API KREDİSİ HARCANMAZ
         await query.edit_message_text(text="❌ Haber silindi.")
 
+# Flask uygulaması (Render'ın botu canlı tutması için)
 app = Flask(__name__)
 @app.route('/')
-def home(): return "Bot haberleri getiriyor!"
+def home(): return "Bot aktif ve çalışıyor!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
+    # Flask sunucusunu başlat
     Thread(target=run_flask).start()
+    
+    # Telegram botunu başlat
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CallbackQueryHandler(button_click))
-    # 6 saatte bir tarar, Twitter API'siyle alakası yoktur
+    
+    # 6 saatte bir tarama yap (Ücretsiz RSS sorgusu)
     application.job_queue.run_repeating(check_news, interval=21600, first=10)
+    
     application.run_polling()
