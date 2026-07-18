@@ -4,9 +4,9 @@ import tweepy
 from flask import Flask
 from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
 
-# Render Environment ayarlarından bilgileri çekiyoruz
+# Render Environment'tan bilgileri al
 TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
 YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
@@ -14,10 +14,8 @@ API_SECRET = os.environ.get("EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"
 ACCESS_TOKEN = os.environ.get("457483523-hsBomhqHfpdqeWlJYiFOmBIjTjgOgvW8pN9FFevk")
 ACCESS_TOKEN_SECRET = os.environ.get("xlc2xEb7HfmuyCnDkjUyhiREsCF0uNqXHFmfKjMN40nt0")
 
-# Haberleri hafızada tutmak için sözlük
 news_cache = {}
 
-# RSS kaynaklarını ücretsiz tara (Twitter API harcamaz)
 def get_latest_news():
     news_list = []
     urls = ["https://tr.investing.com/rss/news.rss", "https://www.kap.org.tr/tr/api/dis-kaynak/rss", "https://www.bloomberght.com/rss"]
@@ -29,7 +27,6 @@ def get_latest_news():
             news_list.append((news_id, entry.title, entry.link))
     return news_list
 
-# Haberleri Telegram'a gönderen fonksiyon
 async def check_news(context):
     news = get_latest_news()
     for news_id, title, link in news:
@@ -39,18 +36,19 @@ async def check_news(context):
         ]
         await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=f"{title}\n{link}", reply_markup=InlineKeyboardMarkup(keyboard))
 
-# Buton tıklamalarını yöneten fonksiyon
+async def start_news(update, context):
+    await check_news(context)
+
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
     data = query.data
     news_id = data[2:]
     
-    if data.startswith("p_"): # PAYLAŞA BASILDIĞINDA API KREDİSİ HARCANIR
+    if data.startswith("p_"):
         item = news_cache.get(news_id)
         if item:
             try:
-                # Twitter bağlantısı SADECE BURADA kuruluyor
                 client = tweepy.Client(consumer_key=API_KEY, consumer_secret=API_SECRET, 
                                        access_token=ACCESS_TOKEN, access_token_secret=ACCESS_TOKEN_SECRET)
                 client.create_tweet(text=f"{item['title']}\n{item['link']}")
@@ -59,33 +57,18 @@ async def button_click(update, context):
                 await query.edit_message_text(text=f"❌ API Hatası: {str(e)}")
         else:
             await query.edit_message_text(text="❌ Haber hafızadan silinmiş.")
-            
-    elif data.startswith("s_"): # SİL - API KREDİSİ HARCANMAZ
+    elif data.startswith("s_"):
         await query.edit_message_text(text="❌ Haber silindi.")
 
-# Flask uygulaması (Render'ın botu canlı tutması için)
 app = Flask(__name__)
 @app.route('/')
-def home(): return "Bot aktif ve çalışıyor!"
+def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    # Flask sunucusunu başlat
     Thread(target=run_flask).start()
-    
-    # Telegram botunu başlat
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CallbackQueryHandler(button_click))
-from telegram.ext import CommandHandler # Bunu importların arasına ekle
-
-# Fonksiyonun altına bunu ekle
-async def start_news(update, context):
-    await check_news(context)
-
-# main kısmına bunu ekle
-application.add_handler(CommandHandler("haber", start_news))
-    
-    # 6 saatte bir tarama yap (Ücretsiz RSS sorgusu)
+    application.add_handler(CommandHandler("haber", start_news))
     application.job_queue.run_repeating(check_news, interval=21600, first=10)
-    
     application.run_polling()
