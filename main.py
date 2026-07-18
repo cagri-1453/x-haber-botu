@@ -1,4 +1,3 @@
-import os
 import feedparser
 import tweepy
 from flask import Flask
@@ -6,13 +5,15 @@ from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
 
-# Token'larını ve ID'lerini tırnakların içine doğrudan yapıştır
-TELEGRAM_BOT_TOKEN = "8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8" # Buraya kendi token'ını yaz
-YOUR_TELEGRAM_ID = "7512577586" # Buraya kendi Telegram ID'ni yaz
-API_KEY = "cn6zvjYROGLnKFOYgYWQo0GF4"
-API_SECRET = "EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"
-ACCESS_TOKEN = "457483523-iRSvuCIQUn8G4eOD4PMfS6wrVHKFwJbLEq0RCBpn"
-ACCESS_TOKEN_SECRET = "zc2K7zPTS9XZ47NuJmZ2aKqwT2FVmWs4ZxoKdyeIz6sj5"
+# --- TOKENLAR ---
+TELEGRAM_BOT_TOKEN = "8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8" # Telegram Token
+YOUR_TELEGRAM_ID = "7512577586"    # Telegram ID
+# Twitter OAuth 2.0 Bilgileri
+CLIENT_ID = "cn6zvjYROGLnKFOYgYWQo0GF4"           # Twitter Client ID
+CLIENT_SECRET = "EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"       # Twitter Client Secret
+ACCESS_TOKEN = "c200and4LWVCN1JOWWFVczRqQU1pSVRSUmpKdkhKOVZNbUZDY2lHVF9KeXJjOjE3ODQ0MTU0NzI0MzI6MToxOmF0OjE"        # Oluşturduğun OAuth 2.0 Access Token
+REFRESH_TOKEN = "MWk3aEx4dURBR3MxaUpvbXMycFFGX2x6YnBncUE3UVVkOFctemJPUWR4d3Q3OjE3ODQ0MTU0NzI0MzI6MToxOnJ0OjE"       # Oluşturduğun OAuth 2.0 Refresh Token
+
 news_cache = {}
 
 def get_latest_news():
@@ -49,8 +50,14 @@ async def button_click(update, context):
         item = news_cache.get(news_id)
         if item:
             try:
-                client = tweepy.Client(consumer_key=API_KEY, consumer_secret=API_SECRET, 
-                                       access_token=ACCESS_TOKEN, access_token_secret=ACCESS_TOKEN_SECRET)
+                # OAuth 2.0 ile Client başlatma
+                client = tweepy.Client(
+                    client_id=CLIENT_ID,
+                    client_secret=CLIENT_SECRET,
+                    access_token=ACCESS_TOKEN,
+                    access_token_secret=REFRESH_TOKEN,
+                    wait_on_rate_limit=True
+                )
                 client.create_tweet(text=f"{item['title']}\n{item['link']}")
                 await query.edit_message_text(text=f"✅ Tweetlendi: {item['title']}")
             except Exception as e:
@@ -66,22 +73,17 @@ def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    # 1. Önce botu başlat (Polling ana süreci durdurur)
     print("--- BOT BAŞLATILIYOR ---")
     
-    # Flask'ı başlat (daemon=True, ana süreç kapanınca Flask da kapanır)
     flask_thread = Thread(target=run_flask, daemon=True)
     flask_thread.start()
     
-    # 2. Botu başlat
     if TELEGRAM_BOT_TOKEN:
         application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
         application.add_handler(CallbackQueryHandler(button_click))
         application.add_handler(CommandHandler("haber", start_news))
         application.job_queue.run_repeating(check_news, interval=21600, first=5)
         
-        print("--- POLLİNG BAŞLIYOR ---")
-        application.run_polling()
         print("--- POLLİNG BAŞLIYOR ---")
         application.run_polling()
     else:
