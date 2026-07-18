@@ -9,8 +9,8 @@ from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandle
 TELEGRAM_BOT_TOKEN = "8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8" # Telegram Token
 YOUR_TELEGRAM_ID = "7512577586"    # Telegram ID
 # Twitter OAuth 2.0 Bilgileri
-CLIENT_ID = "cn6zvjYROGLnKFOYgYWQo0GF4"           # Twitter Client ID
-CLIENT_SECRET = "EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb"       # Twitter Client Secret
+CLIENT_ID = "cGpuVUFOTDVXRTExclF1ZTZpNWs6MTpjaQ"           # Twitter Client ID
+CLIENT_SECRET = "u_I621Icn-9XVRWQHbKU53Oo9QPbRBy_4XtCJRuzpZWa99F-Jt"       # Twitter Client Secret
 ACCESS_TOKEN = "c200and4LWVCN1JOWWFVczRqQU1pSVRSUmpKdkhKOVZNbUZDY2lHVF9KeXJjOjE3ODQ0MTU0NzI0MzI6MToxOmF0OjE"        # Oluşturduğun OAuth 2.0 Access Token
 REFRESH_TOKEN = "MWk3aEx4dURBR3MxaUpvbXMycFFGX2x6YnBncUE3UVVkOFctemJPUWR4d3Q3OjE3ODQ0MTU0NzI0MzI6MToxOnJ0OjE"       # Oluşturduğun OAuth 2.0 Refresh Token
 
