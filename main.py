@@ -6,14 +6,16 @@ from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
 
-# DEĞİŞKEN İSİMLERİ RENDER'DAKİLERLE AYNI KALMALI
+# Eğer os.environ.get boş dönerse, botun çökmemesi için hata mesajı ver
 TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
+if not TELEGRAM_BOT_TOKEN:
+    print("CRITICAL ERROR: TELEGRAM_BOT_TOKEN environment variable is NOT SET.")
+
 YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 API_KEY = os.environ.get("cn6zvjYROGLnKFOYgYWQo0GF4")
 API_SECRET = os.environ.get("EryNYsgIu4P9Gl9RAWC04cB9L6cFbbI2yEqa9HND0qPP6rVJbb")
 ACCESS_TOKEN = os.environ.get("457483523-hsBomhqHfpdqeWlJYiFOmBIjTjgOgvW8pN9FFevk")
 ACCESS_TOKEN_SECRET = os.environ.get("xlc2xEb7HfmuyCnDkjUyhiREsCF0uNqXHFmfKjMN40nt0")
-
 news_cache = {}
 
 def get_latest_news():
