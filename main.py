@@ -57,7 +57,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Botu çalıştır
 if __name__ == '__main__':
-    application = ApplicationBuilder().token(config.TELEGRAM_BOT_TOKEN).build()
+    application = ApplicationBuilder().token(config.TELEGRAM_BOT_TOKEN).job_queue(None).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_click))
     
