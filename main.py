@@ -37,13 +37,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Bot aktif! Haberler izleniyor...")
 
 # Haberleri Telegram'a gönder ve buton ekle
+async def # Haberleri Telegram'a gönder
 async def check_news(context: ContextTypes.DEFAULT_TYPE):
     news = get_latest_news()
-    for item in news:
-        keyboard = [[InlineKeyboardButton("Tweetle", callback_data=f"tweet|{item['title']}|{item['link']}")]]
+    for i, item in enumerate(news):
+        # Sadece indeks gönderiyoruz, metinler kodun içinde eşleşecek
+        keyboard = [[InlineKeyboardButton("Tweetle", callback_data=f"tweet_{i}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.send_message(chat_id=config.YOUR_TELEGRAM_ID, text=f"{item['title']}\n{item['link']}", reply_markup=reply_markup)
-
+        # Haberleri bir listeye kaydedip sonra erişmemiz lazım (Şimdilik başlığı gönderiyoruz)
+        await context.bot.send_message(chat_id=config.YOUR_TELEGRAM_ID, 
+                                       text=f"{item['title']}\n{item['link']}", 
+                                       reply_markup=reply_markup)
+        context.user_data[f"haber_{i}"] = item # Haberi hafızaya al
 # Tweetleme işleyişi
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
