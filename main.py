@@ -66,19 +66,21 @@ def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    # Flask sunucusunu başlat
+    print("--- BOT BAŞLATILIYOR ---")
+    if not TELEGRAM_BOT_TOKEN:
+        print("HATA: TELEGRAM_BOT_TOKEN bulunamadı!")
+    else:
+        print(f"Token okundu, uzunluk: {len(TELEGRAM_BOT_TOKEN)}")
+
     Thread(target=run_flask).start()
     
-    # Telegram botunu oluştur ve başlat
-    application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    
-    # Komutları ekle
-    application.add_handler(CallbackQueryHandler(button_click))
-    application.add_handler(CommandHandler("haber", start_news))
-    
-    # İş zamanlayıcıyı başlat
-    application.job_queue.run_repeating(check_news, interval=21600, first=5)
-    
-    # BOTA KOMUT GELMESİNİ ZORLA (Polling'i başlat)
-    print("Bot dinlemeye başladı...")
-    application.run_polling(drop_pending_updates=True)
+    try:
+        application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+        application.add_handler(CallbackQueryHandler(button_click))
+        application.add_handler(CommandHandler("haber", start_news))
+        application.job_queue.run_repeating(check_news, interval=21600, first=5)
+        
+        print("--- POLLİNG BAŞLIYOR ---")
+        application.run_polling()
+    except Exception as e:
+        print(f"KRİTİK HATA: {e}")
