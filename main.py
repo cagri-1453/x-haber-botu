@@ -6,7 +6,6 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
 import os
 
-# Değişkenleri alırken hata kontrolü ekliyoruz
 API_KEY = os.environ.get("xb3kHJ9fOiEoCNvBXfmVSrJL7")
 API_SECRET = os.environ.get("Hf07yOy40fskGbH469l82VB6Xyh1E5SpAEHU2Cm2HQIswiqEhC")
 ACCESS_TOKEN = os.environ.get("457483523-rbR3J7xwOJmsHALQWQAbxEJRbt0f0YzWv4kUkCFH")
@@ -14,10 +13,15 @@ ACCESS_TOKEN_SECRET = os.environ.get("ajHhAfl5UjRvUUFgc2wspsPsrtb6X0vl2GvpzUJe8h
 TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
 YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 
-# Eğer herhangi biri boşsa botu başlatmadan önce uyar
+# --- TEST ADIMI: DEĞİŞKENLERİ LOGLAYALIM ---
+print(f"DEBUG: API_KEY durumu: {API_KEY}")
+print(f"DEBUG: API_SECRET durumu: {API_SECRET}")
+print(f"DEBUG: TELEGRAM_BOT_TOKEN durumu: {TELEGRAM_BOT_TOKEN}")
+
 if not all([API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET, TELEGRAM_BOT_TOKEN, YOUR_TELEGRAM_ID]):
-    print("HATA: Ortam değişkenleri eksik! Render ayarlarını kontrol et.")
-    exit(1) # Botu hemen durdur ki boşuna çalışma
+    print("HATA: Aşağıdaki değişkenlerden biri veya birkaçı boş geldi:")
+    print(f"API_KEY: {API_KEY}, API_SECRET: {API_SECRET}, ACCESS_TOKEN: {ACCESS_TOKEN}, ACCESS_TOKEN_SECRET: {ACCESS_TOKEN_SECRET}, TELEGRAM: {TELEGRAM_BOT_TOKEN}, ID: {YOUR_TELEGRAM_ID}")
+    exit(1)
 news_cache = {}
 
 # --- TARAMA (X İLE İLETİŞİM YOK - SADECE RSS OKUR) ---
