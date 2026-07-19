@@ -1,25 +1,22 @@
 import feedparser
 import tweepy
-import logging
 from flask import Flask
 from threading import Thread
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler
+import os
 
-# --- AYARLAR ---
-# Bu değerleri Render'daki Environment Variables kısmından çekmek en güvenlisidir, 
-# ancak buraya da yazabilirsin.
-API_KEY = "NGgoVkbGFu8lk0Cj5VtZqlp1T"
-API_SECRET = "AyCz0m1dJV8ezV8khgygX7hBtvT6KKlnCZBvzQiJkOI6x1kjwI"
-ACCESS_TOKEN = "457483523-BqOwnURjjUnt4DgkV1gLEhYvgLOsfoFVppXoFgj7"
-ACCESS_TOKEN_SECRET = "AINT6GsCQa7Ti14Qi531Amxxz4mSRuOguWQGlhgGLx9yU"
-
-TELEGRAM_BOT_TOKEN = "8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8" 
-YOUR_TELEGRAM_ID = "7512577586" 
+# Render Environment Variables'dan değerleri al (Güvenli yöntem)
+API_KEY = os.environ.get("xb3kHJ9fOiEoCNvBXfmVSrJL7")
+API_SECRET = os.environ.get("Hf07yOy40fskGbH469l82VB6Xyh1E5SpAEHU2Cm2HQIswiqEhC")
+ACCESS_TOKEN = os.environ.get("457483523-rbR3J7xwOJmsHALQWQAbxEJRbt0f0YzWv4kUkCFH")
+ACCESS_TOKEN_SECRET = os.environ.get("ajHhAfl5UjRvUUFgc2wspsPsrtb6X0vl2GvpzUJe8hqPi")
+TELEGRAM_BOT_TOKEN = os.environ.get("8867562678:AAFEulJ8dGZs7NjBqSTHDFo5VCGZBzD9UQ8")
+YOUR_TELEGRAM_ID = os.environ.get("7512577586")
 
 news_cache = {}
 
-# --- HABER TARAMA (7/24 ÇALIŞIR, X İLE İLETİŞİME GEÇMEZ) ---
+# --- TARAMA (X İLE İLETİŞİM YOK - SADECE RSS OKUR) ---
 def get_latest_news():
     news_list = []
     urls = ["https://tr.investing.com/rss/news.rss", "https://www.kap.org.tr/tr/api/dis-kaynak/rss", "https://www.bloomberght.com/rss"]
@@ -38,7 +35,7 @@ async def check_news(context):
                      InlineKeyboardButton("❌ Sil", callback_data=f"s_{news_id}")]]
         await context.bot.send_message(chat_id=YOUR_TELEGRAM_ID, text=f"{title}\n{link}", reply_markup=InlineKeyboardMarkup(keyboard))
 
-# --- BUTON TETİKLEME (SADECE SEN BASINCA X İLE İLETİŞİME GEÇER) ---
+# --- TETİKLEMELİ PAYLAŞIM (X İLE İLETİŞİM SADECE BURADA) ---
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
@@ -49,7 +46,7 @@ async def button_click(update, context):
         item = news_cache.get(news_id)
         if item:
             try:
-                # X (Twitter) Bağlantısı SADECE burada kuruluyor
+                # X bağlantısı sadece butona basıldığında kurulur
                 client = tweepy.Client(
                     consumer_key=API_KEY,
                     consumer_secret=API_SECRET,
@@ -57,26 +54,25 @@ async def button_click(update, context):
                     access_token_secret=ACCESS_TOKEN_SECRET
                 )
                 client.create_tweet(text=f"{item['title']}\n{item['link']}")
-                await query.edit_message_text(text=f"✅ Başarıyla Tweetlendi:\n{item['title']}")
+                await query.edit_message_text(text=f"✅ Tweetlendi: {item['title']}")
             except Exception as e:
+                # 402 veya 403 hatalarını burada yakalıyoruz
                 await query.edit_message_text(text=f"❌ X API Hatası: {str(e)}")
         else:
             await query.edit_message_text(text="❌ Haber bulunamadı.")
     elif data.startswith("s_"):
         await query.edit_message_text(text="❌ İşlem iptal edildi.")
 
-# --- WEB SUNUCU (RENDER İÇİN GEREKLİ) ---
+# --- WEB SUNUCU ---
 app = Flask(__name__)
 @app.route('/')
 def home(): return "Bot aktif!"
 def run_flask(): app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    # Web sunucusunu başlat
     flask_thread = Thread(target=run_flask, daemon=True)
     flask_thread.start()
     
-    # Telegram Botunu başlat
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CallbackQueryHandler(button_click))
     application.add_handler(CommandHandler("haber", check_news))
