@@ -60,13 +60,12 @@ async def button_click(update, context):
                 )
                 client.create_tweet(text=f"{item['title']}\n{item['link']}")
                 await query.edit_message_text(text=f"✅ Tweetlendi: {item['title']}")
-            except Exception as e:
-                await query.edit_message_text(text=f"❌ X API Hatası: {str(e)}")
-        else:
-            await query.edit_message_text(text="❌ Haber bulunamadı.")
-    elif data.startswith("s_"):
-        await query.edit_message_text(text="❌ İşlem iptal edildi.")
-
+           except Exception as e:
+                error_msg = str(e)
+                if "402" in error_msg:
+                    await query.edit_message_text(text="❌ X API Hatası: Krediniz bitti. Twitter Developer portalından ödeme planınızı kontrol edin.")
+                else:
+                    await query.edit_message_text(text=f"❌ X API Hatası: {error_msg}")
 # --- WEB SUNUCU ---
 app = Flask(__name__)
 @app.route('/')
